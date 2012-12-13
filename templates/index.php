@@ -37,6 +37,29 @@
     <?php echo makeButton('uebernehmen', 'input', '','do_choose_count')?>
     <br>
     <br>
+<label style="padding-right:10px;width:100px;display:block;float:left;" for="copy_type">
+    <?php echo _("Typ:");?>
+</label>
+<select name="copy_type">
+<?
+foreach (SeminarCategories::getAll() as $sc) {
+    foreach ($sc->getTypes() as $key => $value) {
+        if (!$sc->course_creation_forbidden) {
+            ?>
+            <option value="<?=$key?>" <?=($copy_type == $key ? 'selected' : '')?>>
+            <?=htmlReady($value . ' (' . $sc->name . ')')?>
+            </option>
+            <?
+        }
+    }
+}
+?>
+</select>
+<? if ($copy_type === 0) {
+    echo '&lArr; ' . _("Mit dem ursprünglichen Typ dürfen keine Veranstaltungen angelegt werden. Wählen Sie ggf. einen alternativen Typ!");
+}
+?>
+    <br>
     <ol>
     <?for ($i = 0; $i < $copy_count;$i++) : ?>
         <li>

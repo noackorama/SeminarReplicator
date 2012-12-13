@@ -48,6 +48,10 @@ class SeminarReplicator extends StudipPlugin implements SystemPlugin {
         if($source_id){
             $source = Seminar::getInstance($source_id);
             $source_name = $source->getName() . ' ('.$source->getStartSemesterName().')';
+            $copy_type = Request::int('copy_type', $source->status);
+            if (SeminarCategories::getByTypeId($copy_type)->course_creation_forbidden) {
+                $copy_type = 0;
+            }
             if (SeminarCategories::getByTypeId($source->status)->only_inst_user) {
                 $search_template = "user_inst";
             } else {
@@ -103,6 +107,7 @@ class SeminarReplicator extends StudipPlugin implements SystemPlugin {
                     $new_sem_id = md5($source->createID());
                     $new_sem->id = $new_sem_id;
                     $new_sem->is_new = true;
+                    $new_sem->status = Request::int('copy_type', 1);
                     $new_sem->irregularSingleDates = null;
                     $new_sem->issues = null;
                     $new_sem->metadate = new Metadate();
@@ -138,6 +143,6 @@ class SeminarReplicator extends StudipPlugin implements SystemPlugin {
         $template_factory = new Flexi_TemplateFactory(dirname(__file__)."/templates");
         $template = $template_factory->open('index.php');
         $template->set_layout($GLOBALS['template_factory']->open('layouts/base_without_infobox.php'));
-        echo $template->render(compact('source_id', 'source_name', 'show_source_result', 'result', 'copy_count', 'to_copy', 'copied'));
+        echo $template->render(compact('source_id', 'source_name', 'show_source_result', 'result', 'copy_count','copy_type', 'to_copy', 'copied'));
     }
 }
