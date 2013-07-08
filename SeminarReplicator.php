@@ -78,7 +78,7 @@ class SeminarReplicator extends StudipPlugin implements SystemPlugin {
                             }
                         }
                     }
-                    if ($add_lecturer === $i) {
+                    if ($add_lecturer === $i && Request::option('add_doz_' . $add_lecturer)) {
                         $to_copy['lecturers'][$i][] = Request::option('add_doz_' . $add_lecturer);
                     }
                     $to_copy['search_lecturer'][$i] = new PermissionSearch($search_template,
@@ -114,7 +114,9 @@ class SeminarReplicator extends StudipPlugin implements SystemPlugin {
                     $new_sem->members = null;
                     $new_sem->name = $to_copy['name'][$i];
                     $new_sem->seminar_number = $to_copy['nr'][$i];
-                    if ($new_sem->store()) {
+                    $new_sem->store();
+                    $new_sem->restore();
+                    if (!$new_sem->is_new) {
                         log_event("SEM_CREATE", $new_sem_id);
                         $gruppe = (int)select_group($new_sem->getSemesterStartTime());
                         $position = 1;

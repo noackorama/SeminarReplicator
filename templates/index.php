@@ -18,8 +18,8 @@
     <?php endforeach?>
     </select>
      <input type="image" src="<?php echo Assets::image_path('icons/16/blue/refresh.png')?>" name="do_search_cancel">
-    <?php echo makeButton('auswaehlen', 'input', '','do_choose_source')?>
-
+     
+    <?php echo Studip\Button::createAccept(_('Auswählen'), 'do_choose_source')?>
 <?php else:?>
     <label style="padding-right:10px;width:100px;display:block;float:left;" for="search_destination">
     <?php echo _("Quelle suchen:")?>
@@ -34,7 +34,8 @@
     <?php echo _("Anzahl Kopien:")?>
     </label>
     <input type="text" id="copy_count" name="copy_count" size="5" value="<?=$copy_count?>">
-    <?php echo makeButton('uebernehmen', 'input', '','do_choose_count')?>
+    
+    <?php echo Studip\Button::createAccept(_('Übernehmen'), 'do_choose_count') ?>
     <br>
     <br>
 <label style="padding-right:10px;width:100px;display:block;float:left;" for="copy_type">
@@ -88,8 +89,8 @@ foreach (SeminarCategories::getAll() as $sc) {
     <?endfor;?>
     </ol>
     <div style="text-align:center">
-    <?php echo makeButton('kopieren', 'input', '','do_copy')?>
-    <a href="?"><?php echo makeButton('abbrechen', 'img')?></a>
+    <?php echo Studip\Button::createAccept(_('Kopieren'),'do_copy')?>
+    <?php echo Studip\LinkButton::createCancel(_('Abbrechen'), '?')?>
     </div>
 <?php endif?>
 <?php if(count($copied)):?>

@@ -1,5 +1,5 @@
 pluginclassname=SeminarReplicator
 pluginname=SeminarReplicator
 origin=data-quest
-version=2
-studipMinVersion=2.1
+version=3
+studipMinVersion=2.3
