@@ -93,32 +93,25 @@ class SeminarReplicator extends StudipPlugin implements SystemPlugin {
             }
             if (Request::submitted('do_copy') && count($to_copy)) {
                 $copied = array();
-                $lecturer_insert = $db->prepare("INSERT INTO seminar_user (seminar_id,user_id,status,position,gruppe,admission_studiengang_id,comment,visible,mkdate) VALUES (?,?,'dozent',?,?,'','','yes',UNIX_TIMESTAMP())");
+                $lecturer_insert = $db->prepare("INSERT INTO seminar_user (seminar_id,user_id,status,position,gruppe,comment,visible,mkdate) VALUES (?,?,'dozent',?,?,'','yes',UNIX_TIMESTAMP())");
                 $copy_seminar_inst = $db->prepare("INSERT INTO seminar_inst (seminar_id,institut_id) SELECT ?,institut_id FROM seminar_inst WHERE seminar_id=?");
                 $copy_seminar_sem_tree = $db->prepare("INSERT INTO seminar_sem_tree (seminar_id,sem_tree_id) SELECT ?,sem_tree_id FROM seminar_sem_tree WHERE seminar_id=?");
-                $copy_seminar_user = $db->prepare("INSERT IGNORE INTO seminar_user (seminar_id,user_id,status,gruppe,admission_studiengang_id, mkdate,comment,position) SELECT ?,user_id,status,gruppe,admission_studiengang_id,UNIX_TIMESTAMP(),'',0 FROM seminar_user WHERE status IN ('user','autor','tutor') AND seminar_id=?");
+                $copy_seminar_user = $db->prepare("INSERT IGNORE INTO seminar_user (seminar_id,user_id,status,gruppe, mkdate,comment,position) SELECT ?,user_id,status,gruppe,UNIX_TIMESTAMP(),'',0 FROM seminar_user WHERE status IN ('user','autor','tutor') AND seminar_id=?");
                 $copy_seminar_userdomains = $db->prepare("INSERT INTO seminar_userdomains (seminar_id,userdomain_id) SELECT ?,userdomain_id FROM seminar_userdomains WHERE seminar_id=?");
-                $copy_admission_seminar_studiengang = $db->prepare("INSERT INTO admission_seminar_studiengang (seminar_id,studiengang_id,quota) SELECT ?,studiengang_id,quota FROM admission_seminar_studiengang WHERE seminar_id=?");
                 $copy_statusgruppen = $db->prepare("INSERT INTO statusgruppen (statusgruppe_id,name,range_id,position,size,selfassign,mkdate) SELECT MD5(CONCAT(statusgruppe_id, ?)),name,?,position,size,selfassign,UNIX_TIMESTAMP() FROM statusgruppen WHERE range_id=?");
                 $copy_statusgruppe_user = $db->prepare("INSERT INTO statusgruppe_user (statusgruppe_id,user_id,position) SELECT MD5(CONCAT(statusgruppe_user.statusgruppe_id, ?)),user_id,statusgruppe_user.position FROM statusgruppen INNER JOIN statusgruppe_user USING(statusgruppe_id) WHERE range_id=?");
 
                 for ($i = 0; $i < $copy_count; $i++) {
-                    $new_sem = clone $source;
-                    $new_sem_id = md5($source->createID());
-                    $new_sem->id = $new_sem_id;
-                    $new_sem->is_new = true;
+                    $new_sem = Course::build($source->toArray());
+                    $new_sem->setId($new_sem->getNewId());
+                    $new_sem_id = $new_sem->id;
                     $new_sem->status = Request::int('copy_type', 1);
-                    $new_sem->irregularSingleDates = null;
-                    $new_sem->issues = null;
-                    $new_sem->metadate = new Metadate();
-                    $new_sem->members = null;
                     $new_sem->name = $to_copy['name'][$i];
-                    $new_sem->seminar_number = $to_copy['nr'][$i];
+                    $new_sem->veranstaltungsnummer = $to_copy['nr'][$i];
                     $new_sem->store();
-                    $new_sem->restore();
-                    if (!$new_sem->is_new) {
+                    if (!$new_sem->isNew()) {
                         log_event("SEM_CREATE", $new_sem_id);
-                        $gruppe = (int)select_group($new_sem->getSemesterStartTime());
+                        $gruppe = (int)select_group($new_sem->start_time);
                         $position = 1;
                         foreach($to_copy['lecturers'][$i] as $lecturer) {
                             $lecturer_insert->execute(array($new_sem_id, $lecturer,$position, $gruppe));
@@ -126,7 +119,6 @@ class SeminarReplicator extends StudipPlugin implements SystemPlugin {
                         $copy_seminar_inst->execute(array($new_sem_id, $source_id));
                         $copy_seminar_sem_tree->execute(array($new_sem_id, $source_id));
                         $copy_seminar_userdomains->execute(array($new_sem_id, $source_id));
-                        $copy_admission_seminar_studiengang->execute(array($new_sem_id, $source_id));
                         if ($to_copy['participants'][$i]) {
                             $copy_seminar_user->execute(array($new_sem_id, $source_id));
                             $copy_statusgruppen->execute(array($new_sem_id,$new_sem_id, $source_id));
@@ -144,7 +136,7 @@ class SeminarReplicator extends StudipPlugin implements SystemPlugin {
         PageLayout::setTitle(_("Veranstaltungs-Vervielfältiger"));
         $template_factory = new Flexi_TemplateFactory(dirname(__file__)."/templates");
         $template = $template_factory->open('index.php');
-        $template->set_layout($GLOBALS['template_factory']->open('layouts/base_without_infobox.php'));
+        $template->set_layout($GLOBALS['template_factory']->open('layouts/base.php'));
         echo $template->render(compact('source_id', 'source_name', 'show_source_result', 'result', 'copy_count','copy_type', 'to_copy', 'copied'));
     }
 }

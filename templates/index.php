@@ -17,15 +17,14 @@
         </option>
     <?php endforeach?>
     </select>
-     <input type="image" src="<?php echo Assets::image_path('icons/16/blue/refresh.png')?>" name="do_search_cancel">
-     
+    <?=Assets::input('icons/16/blue/refresh.png', array('name' => 'do_search_cancel'))?>
     <?php echo Studip\Button::createAccept(_('Auswählen'), 'do_choose_source')?>
 <?php else:?>
     <label style="padding-right:10px;width:100px;display:block;float:left;" for="search_destination">
     <?php echo _("Quelle suchen:")?>
     </label>
     <input type="text" id="search_source" name="search_source" size="40">
-    <input style="vertical-align:middle;" type="image" src="<?php echo Assets::image_path('icons/16/blue/search.png')?>" name="do_search_source">
+    <?=Assets::input('icons/16/blue/search.png', array('name' => 'do_search_source'))?>
 <?php endif?>
 <br><br>
 <?php if($source_id):?>
@@ -34,7 +33,7 @@
     <?php echo _("Anzahl Kopien:")?>
     </label>
     <input type="text" id="copy_count" name="copy_count" size="5" value="<?=$copy_count?>">
-    
+
     <?php echo Studip\Button::createAccept(_('Übernehmen'), 'do_choose_count') ?>
     <br>
     <br>
@@ -75,15 +74,17 @@ foreach (SeminarCategories::getAll() as $sc) {
         <? foreach($to_copy['lecturers'][$i] as $lecturer) : ?>
             <?=htmlReady(get_fullname($lecturer))?>
             <input type="hidden" name="to_copy[lecturers][<?=$i?>][]" value="<?=$lecturer?>">
-            <input type="image" style="vertical-align:middle" src="<?=Assets::image_path('icons/16/black/trash.png')?>" name="delete_lecturer[<?=$i?>][<?=$lecturer?>]">
+            <?=Assets::input('icons/16/black/trash.png', array('name' => 'delete_lecturer['.$i.']['.$lecturer.']'))?>
             <br>
         <? endforeach;?>
-        <br>
+            <div style="float:left">
+                <?=Assets::input('icons/16/yellow/arr_2up.png', array('name' => 'add_lecturer['.$i.']'));?>
+            </div>
 <? echo QuickSearch::get("add_doz_" . $i, $to_copy['search_lecturer'][$i])
                             ->withButton(array('search_button_name' => 'search_doz', 'reset_button_name' => 'reset_search'))
                             ->render();
                             ?>
-         <input type="image" name="add_lecturer[<?=$i?>]" src="<?=Assets::image_path('icons/16/yellow/arr_2up.png')?>">
+
         </div>
         </li>
     <?endfor;?>
@@ -98,10 +99,10 @@ foreach (SeminarCategories::getAll() as $sc) {
 <ol>
     <?foreach ($copied as $copy) : ?>
         <li>
-        <a href="<?=UrlHelper::getLink('seminar_main.php?auswahl=' . $copy->getId())?>"><?=htmlReady(trim($copy->seminar_number . ' ' . $copy->name))?></a>
+        <a href="<?=UrlHelper::getLink('seminar_main.php?auswahl=' . $copy->getId())?>"><?=htmlReady(trim($copy->veranstaltungsnummer . ' ' . $copy->name))?></a>
         <br>
         <?
-        echo join('; ', array_map(function($d) {return $d['Nachname'];}, $copy->getMembers('dozent')));
+        echo join('; ', $copy->members->findBy('status', 'dozent')->pluck('nachname'));
         ?>
         <br>
         </li>
